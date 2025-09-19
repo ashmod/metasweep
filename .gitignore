@@ -1,0 +1,35 @@
+# build artifacts
+/build/
+/cmake-build-*/
+/CMakeFiles/
+CMakeCache.txt
+*.cmake
+*.ninja
+*.ninja_deps
+*.ninja_log
+compile_commands.json
+
+# binaries & libs
+/metasweep
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+
+# IDE/editor
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+.DS_Store
+
+# reports / outputs
+*.cleaned.*
+*.json
+*.html
+
+# test artifacts
+/tests/tmp/
