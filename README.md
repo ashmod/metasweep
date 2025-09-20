@@ -1,4 +1,4 @@
-# metasweep — privacy-friendly metadata inspector & cleaner
+# metasweep — metadata inspector & cleaner
 
 Local-only. Transparent. Fast.
 
