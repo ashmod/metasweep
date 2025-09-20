@@ -1,0 +1,6 @@
+name: aggressive
+keep:
+  - EXIF.Orientation
+  - Image.ColorProfile
+  - Image.DPI
+# default deny everything else

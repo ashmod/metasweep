@@ -9,14 +9,23 @@
 using namespace std;
 
 namespace cmd {
-int run_inspect(const vector<string>& targets, const InspectOpts& o) {
+int run_inspect(const std::vector<std::string>& targets, const InspectOpts& o) {
+  std::vector<core::InspectResult> all;
+  all.reserve(targets.size());
   for (auto& t : targets) {
-    auto d = core::detect_file(t);
-    auto r = core::inspect(d);
-    core::print_pretty(r, o.verbose, !o.no_color);
+    auto info = core::detect_file(t);
+    auto r = core::inspect(info);
+    all.push_back(std::move(r));
+  }
+  core::print_inspection_batch(all, o.verbose, !o.no_color);
+
+  if (!o.report.empty()) {
+    core::write_json_report(all, o.report);
+    fmt::print("Wrote report: {}\n", o.report);
   }
   return 0;
 }
+
 
 int run_strip(const vector<string>& targets, const core::Policy& policy, const StripOpts& o) {
   for (auto& t : targets) {

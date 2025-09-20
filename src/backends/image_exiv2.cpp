@@ -2,6 +2,9 @@
 #include <exiv2/exiv2.hpp>
 #include <filesystem>
 #include <cstdio>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 using namespace core;
 

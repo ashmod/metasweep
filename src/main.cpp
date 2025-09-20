@@ -1,90 +1,65 @@
 #include <CLI/CLI.hpp>
 #include <fmt/format.h>
 #include "cli/commands.hpp"
-#include "core/detect.hpp"
 #include "core/policy.hpp"
 
 int main(int argc, char** argv) {
-  CLI::App app{"privacy-friendly metadata inspector & cleaner (local-only)"};
+  CLI::App app{"metasweep — privacy-friendly metadata inspector/stripper"};
 
+  // Global flags (apply to subcommands via the opts we pass)
   bool no_color = false;
-  int vcount = 0;
-  app.add_flag("--no-color", no_color, "disable ANSI colors");
-  app.add_flag("-v,--verbose", vcount, "increase verbosity (repeatable)");
+  app.add_flag("--no-color", no_color, "Disable colored output");
 
-  // shared policy flags (subcommand-local via helper)
-  bool safe=false; std::string custom_policy;
-  auto add_policy_opts = [&](CLI::App* sub){
-    sub->add_flag("--safe", safe, "use safe policy");
-    sub->add_option("--custom", custom_policy, "policy file (YAML/JSON)");
-  };
-
-  // ===== inspect =====
+  // ----- inspect -----
+  auto* inspect = app.add_subcommand("inspect", "Inspect metadata");
   std::vector<std::string> inspect_targets;
-  auto* inspect = app.add_subcommand("inspect", "show metadata summary (no changes)");
-  bool recursive_inspect=false;
-  std::string format_inspect="auto", report_inspect;
-  inspect->add_option("targets", inspect_targets)->required();
-  inspect->add_flag("-r,--recursive", recursive_inspect, "recurse into directories");
-  inspect->add_option("--format", format_inspect, "output format: auto|json|pretty|html");
-  inspect->add_option("--report", report_inspect, "write JSON/HTML report");
-  add_policy_opts(inspect);
+  cmd::InspectOpts inspect_opts; // has: recursive, format, report, verbose, no_color
+  inspect->add_option("files", inspect_targets, "Files to inspect")->required();
+  inspect->add_flag("-v,--verbose", inspect_opts.verbose, "Verbose field listing");
 
-  // ===== strip =====
+  // ----- strip -----
+  auto* strip = app.add_subcommand("strip", "Strip metadata");
   std::vector<std::string> strip_targets;
-  auto* strip = app.add_subcommand("strip", "remove metadata according to policy");
-  bool recursive_strip=false, in_place=false, yes=false, dry_run=false;
-  std::string out_dir, format_strip="auto", report_strip;
-  strip->add_option("targets", strip_targets)->required();
-  strip->add_flag("-r,--recursive", recursive_strip, "recurse into directories");
-  strip->add_option("-o,--out-dir", out_dir, "write cleaned files to DIR");
-  strip->add_flag("--in-place", in_place, "overwrite originals (prompt unless --yes)");
-  strip->add_flag("--yes", yes, "skip confirmation prompts");
-  strip->add_flag("--dry-run", dry_run, "show what would happen");
-  strip->add_option("--format", format_strip, "output format: auto|json|pretty|html");
-  strip->add_option("--report", report_strip, "write JSON/HTML report");
-  add_policy_opts(strip);
+  cmd::StripOpts strip_opts; // has: recursive, out_dir, in_place, yes, format, report, dry_run, verbose, no_color
+  bool safe_flag = false;
+  std::string custom_policy;
+  strip->add_option("files", strip_targets, "Files to strip")->required();
+  strip->add_flag("--dry-run", strip_opts.dry_run, "Show plan without writing");
+  strip->add_flag("--in-place", strip_opts.in_place, "Overwrite original files (no backup)");
+  strip->add_option("-o,--out-dir", strip_opts.out_dir, "Output directory");
+  strip->add_flag("--safe", safe_flag, "Use built-in safe policy");
+  strip->add_option("--custom", custom_policy, "Policy file (YAML/JSON)");
 
-  // ===== explain =====
-  std::vector<std::string> explain_target;
-  auto* explain = app.add_subcommand("explain", "describe risks & recommendations");
-  explain->add_option("target", explain_target)->required()->expected(1);
+  // ----- explain -----
+  auto* explain = app.add_subcommand("explain", "Explain risks for a file");
+  std::string explain_target;
+  cmd::ExplainOpts explain_opts; // has: verbose, no_color
+  explain->add_option("file", explain_target, "File to explain")->required();
+  explain->add_flag("-v,--verbose", explain_opts.verbose, "Verbose field listing");
 
-  // parse
+  // Parse
   try { app.parse(argc, argv); }
-  catch(const CLI::ParseError& e) { return app.exit(e); }
+  catch (const CLI::ParseError& e) { return app.exit(e); }
 
-  // dispatch
-  if (*inspect) {
-    cmd::InspectOpts io;
-    io.recursive = recursive_inspect;
-    io.format = format_inspect;
-    io.report = report_inspect;
-    io.verbose = vcount;
-    io.no_color = no_color;
-    return cmd::run_inspect(inspect_targets, io);
+  // Apply global to subcommand opts
+  inspect_opts.no_color = no_color;
+  strip_opts.no_color   = no_color;
+  explain_opts.no_color = no_color;
+
+  // Dispatch
+  if (inspect->parsed()) {
+    return cmd::run_inspect(inspect_targets, inspect_opts);
+  }
+  if (strip->parsed()) {
+    // Build policy from safe/custom; no extra keep/drop from CLI yet
+    core::Policy pol = core::load_policy(safe_flag, custom_policy, /*keep*/{}, /*drop*/{});
+    return cmd::run_strip(strip_targets, pol, strip_opts);
+  }
+  if (explain->parsed()) {
+    return cmd::run_explain(explain_target, explain_opts);
   }
 
-  if (*strip) {
-    core::Policy pol = core::load_policy(safe, custom_policy, {}, {});
-    cmd::StripOpts so;
-    so.recursive = recursive_strip;
-    so.out_dir = out_dir;
-    so.in_place = in_place;
-    so.yes = yes;
-    so.format = format_strip;
-    so.report = report_strip;
-    so.dry_run = dry_run;
-    so.verbose = vcount;
-    so.no_color = no_color;
-    return cmd::run_strip(strip_targets, pol, so);
-  }
-
-  if (*explain) {
-    cmd::ExplainOpts eo; eo.verbose = vcount; eo.no_color = no_color;
-    return cmd::run_explain(explain_target.front(), eo);
-  }
-
+  // No subcommand → help
   fmt::print("{}\n", app.help());
   return 0;
 }

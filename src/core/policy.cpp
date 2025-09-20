@@ -3,9 +3,6 @@
 #include <fstream>
 #include <stdexcept>
 
-// If you’ve added yaml-cpp/nlohmann_json, you can extend this to parse files.
-// For core functionality now: built-ins + CLI overlays.
-
 namespace core {
 
 static Policy builtin_aggressive() {
@@ -64,6 +61,9 @@ std::string risk_for(const std::string& f) {
   if (f=="EXIF.SerialNumber" || f=="EXIF.Make" || f=="EXIF.Model" || f=="ID3.TPE1") return "MEDIUM";
   if (f=="EXIF.Orientation" || f=="Image.ColorProfile" || f=="Image.DPI") return "SAFE";
   if (f.rfind("PDF.",0)==0) return "MEDIUM";
+  if (f=="ID3.TPE1" || f=="ID3.TALB") return "MEDIUM";
+  if (f=="ID3.TDRC") return "LOW";
+  if (f=="ZIP.Comment") return "LOW";
   return "LOW";
 }
 

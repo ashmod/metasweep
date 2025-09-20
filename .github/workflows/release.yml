@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            install: sudo apt-get update && sudo apt-get install -y cmake build-essential libexiv2-dev libtag1-dev zlib1g-dev
+            cpack: cpack -G TGZ --config build/CPackConfig.cmake
+          - os: macos-latest
+            install: brew install cmake exiv2 taglib zlib pkg-config
+            cpack: cpack -G TGZ --config build/CPackConfig.cmake
+          - os: windows-latest
+            install: echo "no extra deps on Windows"
+            cpack: cpack -G ZIP --config build/CPackConfig.cmake
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: ${{ matrix.install }}
+        shell: bash
+
+      - name: Configure (full)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        shell: bash
+
+      - name: Build (full)
+        run: cmake --build build --config Release -- -j
+
+      - name: Install staging
+        run: cmake --install build --config Release --prefix staging
+
+      - name: Package (CPack)
+        run: ${{ matrix.cpack }}
+        shell: bash
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metasweep-${{ runner.os }}-full
+          path: |
+            *.tar.gz
+            *.zip
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

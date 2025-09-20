@@ -1,0 +1,20 @@
+name: safe
+keep:
+  - EXIF.Orientation
+  - Image.ColorProfile
+  - Image.DPI
+
+drop:
+  - EXIF.GPS*
+  - EXIF.SerialNumber
+  - XMP.CreatorTool
+  - XMP.History*
+  - PDF.Author
+  - PDF.Creator
+  - PDF.Producer
+  - PDF.CreationDate
+  - PDF.ModDate
+  - ID3.TPE1
+  - ID3.TALB
+  - ID3.TDRC
+  - ZIP.Comment
