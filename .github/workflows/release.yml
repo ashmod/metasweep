@@ -86,7 +86,11 @@ jobs:
         run: |
           curl -L -o linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy
-          ./linuxdeploy --appdir AppDir -e AppDir/usr/bin/metasweep -d AppDir/metasweep.desktop --output appimage
+          ./linuxdeploy --appdir AppDir \
+            -e AppDir/usr/bin/metasweep \
+            -d AppDir/metasweep.desktop \
+            -i tools/appimage/metasweep.svg \
+            --output appimage
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:

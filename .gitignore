@@ -29,6 +29,11 @@ compile_commands.json
 # reports / outputs
 *.cleaned.*
 *.html
+*.json
 
 # test artifacts
 /tests/tmp/
+
+# npm wrapper artifacts
+tools/npm/bin/.vendor/
+node_modules/
