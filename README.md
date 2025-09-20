@@ -17,6 +17,7 @@ metasweep inspects and strips hidden metadata from common file types. It favors 
 
 Prebuilt packages are published for tagged releases:
 - Linux/macOS/Windows: see the Releases page artifacts (TGZ/ZIP) containing `metasweep` and built-in policies.
+- Linux AppImage: a single self-contained `*.AppImage` that runs without extra packages.
 
 To install from a package:
 ```bash
@@ -25,6 +26,10 @@ tar -xzf metasweep-*.tar.gz
 sudo install -m 0755 bin/metasweep /usr/local/bin/metasweep
 sudo mkdir -p /usr/local/share/metasweep/policies
 sudo cp -r share/metasweep/policies/* /usr/local/share/metasweep/policies/
+
+# AppImage
+chmod +x metasweep-*.AppImage
+./metasweep-*.AppImage --help
 ```
 
 ## Build from source

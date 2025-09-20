@@ -218,7 +218,9 @@ if(APPLE OR WIN32)
   # Use CMake BundleUtilities to copy dependent shared libs next to the executable
   install(CODE [[
     include(BundleUtilities)
-    set(_exe "${CMAKE_INSTALL_PREFIX}/bin/metasweep")
+    # Ensure absolute install prefix when --prefix is relative
+    get_filename_component(_prefix_abs "${CMAKE_INSTALL_PREFIX}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
+    set(_exe "${_prefix_abs}/bin/metasweep")
     set(_search "")
     if(APPLE)
       # Common Homebrew/MacPorts locations

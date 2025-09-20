@@ -38,7 +38,7 @@ jobs:
         run: cmake --build build --config Release --parallel
 
       - name: Install staging
-        run: cmake --install build --config Release --prefix staging
+        run: cmake --install build --config Release --prefix "${{ github.workspace }}/staging"
 
       - name: Package (CPack)
         run: ${{ matrix.cpack }}
