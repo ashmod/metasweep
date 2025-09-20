@@ -2,49 +2,85 @@
 
 Local-only. Transparent. Fast.
 
-metasweep inspects and strips hidden metadata from common file types. It favors transparency (see what’s inside), choice (policies: aggressive/safe/custom), and trust (no network, open source).
+**metasweep** inspects and strips hidden metadata from common file types. It favors transparency (see what’s inside), choice (policies: aggressive/safe/custom), and trust (no network, open source).
 
-## Features
-- Multi-format: Images (EXIF/IPTC/XMP via Exiv2), PDFs (/Info), Audio (ID3/FLAC/Vorbis via TagLib), ZIP (comments/extra fields)
-- Transparency: human-readable inspect output with risk highlights
-- Flexible cleaning: `--inspect`, `--strip`, `--safe`, `--custom`
-- Batch-friendly: works on files, globs, or directories
-- Local & private: no telemetry, no network calls
-- Reports: optional JSON output (`--report file.json`)
-- Dry-run preview: show planned keep/drop with `--dry-run`
+**Quick install (Linux only for now):**
 
-## Install
-
-Prebuilt packages are published for tagged releases:
-- Linux/macOS/Windows: see the Releases page artifacts (TGZ/ZIP) containing `metasweep` and built-in policies.
-- Linux AppImage: a single self-contained `*.AppImage` that runs without extra packages.
-
-Via npm (Linux only, for now)
-- One-line install using an npm shim that downloads the native binary:
-  - Global: `npm i -g metasweep` → run `metasweep ...`
-  - On-demand: `npx metasweep --help`
-- Notes:
-  - Currently supports Linux x64 (AppImage) and fetches the artifact from GitHub Releases.
-  - If you use a fork or a different GitHub org, set env `METASWEEP_GH_REPO=owner/repo` before install, or `METASWEEP_DOWNLOAD_URL` to a direct asset URL.
-
-To install from a package:
 ```bash
-# Example Linux (tar.gz)
-tar -xzf metasweep-*.tar.gz
-sudo install -m 0755 bin/metasweep /usr/local/bin/metasweep
-sudo mkdir -p /usr/local/share/metasweep/policies
-sudo cp -r share/metasweep/policies/* /usr/local/share/metasweep/policies/
-
-# AppImage
-chmod +x metasweep-*.AppImage
-./metasweep-*.AppImage --help
-
-# npm (Linux x64)
 npm i -g metasweep
 metasweep --help
 ```
 
-## Build from source
+Or run once without installing:
+
+```bash
+npx metasweep inspect photo.jpg
+```
+
+---
+
+## Features
+
+* Multi-format: Images (EXIF/IPTC/XMP via Exiv2), PDFs (/Info), Audio (ID3/FLAC/Vorbis via TagLib), ZIP (comments/extra fields)
+* Transparency: human-readable inspect output with risk highlights
+* Flexible cleaning: `--inspect`, `--strip`, `--safe`, `--custom`
+* Batch-friendly: works on files, globs, or directories
+* Local & private: no telemetry, no network calls
+* Reports: optional JSON output (`--report file.json`)
+* Dry-run preview: show planned keep/drop with `--dry-run`
+
+---
+
+## Install
+
+### Option 1: npm (Linux only)
+
+* Downloads the prebuilt **AppImage** binary from GitHub Releases.
+* Currently supports **Linux x64**.
+
+```bash
+# Global install
+npm i -g metasweep
+metasweep --help
+
+# One-off usage
+npx metasweep inspect file.jpg
+```
+
+Environment overrides:
+
+* `METASWEEP_GH_REPO=owner/repo` → use a different GitHub repo.
+* `METASWEEP_DOWNLOAD_URL=URL` → use a direct asset URL.
+
+---
+
+### Option 2: Prebuilt packages
+
+Check the [Releases page](https://github.com/ashmod/metasweep/releases) for binaries:
+
+* **Linux/macOS/Windows:** tar.gz/zip archives with `metasweep` binary + policies.
+* **Linux AppImage:** portable, runs without extra deps.
+
+Example (Linux tar.gz):
+
+```bash
+tar -xzf metasweep-*.tar.gz
+sudo install -m 0755 bin/metasweep /usr/local/bin/metasweep
+sudo mkdir -p /usr/local/share/metasweep/policies
+sudo cp -r share/metasweep/policies/* /usr/local/share/metasweep/policies/
+```
+
+Example (AppImage):
+
+```bash
+chmod +x metasweep-*.AppImage
+./metasweep-*.AppImage --help
+```
+
+---
+
+### Option 3: Build from source
+
 ```bash
 # Ubuntu
 sudo apt update
@@ -52,10 +88,12 @@ sudo apt install -y cmake build-essential libexiv2-dev libtag1-dev zlib1g-dev
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
-
 ```
 
+---
+
 ## CLI
+
 ```
 metasweep <command> [targets...] [options]
 
@@ -63,28 +101,14 @@ Commands:
   inspect     Show metadata summary (no changes)
   strip       Remove metadata according to policy
   explain     Describe risks & recommendations
-
-Common options:
-  --no-color              Disable ANSI colors
-  -v, --verbose           Extra detail (repeatable on inspect/explain)
-  -r, --recursive         Recurse into directories
-
-Strip options:
-  --safe                  Use built-in safe policy
-  --custom FILE           Use policy file (YAML/JSON) [placeholder]
-  --dry-run               Show what would be dropped/kept
-  --in-place              Overwrite originals
-  --yes                   Skip confirmation for --in-place
-  -o, --out-dir DIR       Write cleaned files to DIR
-  --keep FIELD            Keep specific fields (repeatable)
-  --drop FIELD            Drop specific fields (repeatable)
-
-Inspect output options:
-  --format json|pretty    Stream JSON to stdout or show table
-  --report FILE           Write JSON report to file
 ```
 
+(…see [full CLI docs](#) below)
+
+---
+
 ## Examples
+
 ```bash
 # Inspect an image
 metasweep inspect photo.jpg
@@ -97,27 +121,26 @@ metasweep strip --safe photo.jpg
 
 # JSON report for a batch
 metasweep inspect ./to-share -r --format json > report.json
-
-# Dry-run to preview what would be removed/kept
-metasweep strip --dry-run photo.jpg
-
-# Recursive with glob
-metasweep strip -r "images/*.jpg" --safe -o cleaned/
-
-# In-place with confirmation
-metasweep strip -r ./to-share --in-place --yes
 ```
 
-## Policies
-Built-ins are embedded (aggressive by default; `--safe` available). Policy files are also shipped under `share/metasweep/policies` for reference.
+---
 
-Aggressive keeps only functional fields like `EXIF.Orientation` and `Image.ColorProfile`.
-Safe keeps Orientation/ICC/DPI and drops identifiers like GPS, serials, authorship, and software tags.
+## Policies
+
+* **Aggressive (default):** keeps only essential fields like Orientation and ColorProfile.
+* **Safe (`--safe`):** keeps Orientation/ICC/DPI, drops identifiers like GPS, serials, authorship, software tags.
+* Reference policy files are under `share/metasweep/policies`.
+
+---
 
 ## Privacy & Safety
-- No network calls. Ever.
-- Only metadata areas are read/rewritten. Document payloads remain untouched.
-- Atomic writes are used by backends where possible.
+
+* No network calls. Ever.
+* Only metadata areas are read/rewritten. File content remains untouched.
+* Atomic writes used where possible.
+
+---
 
 ## License
-See `LICENSE`.
+
+See [LICENSE](./LICENSE).
