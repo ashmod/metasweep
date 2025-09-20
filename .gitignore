@@ -28,7 +28,6 @@ compile_commands.json
 
 # reports / outputs
 *.cleaned.*
-*.json
 *.html
 
 # test artifacts

@@ -16,6 +16,9 @@ int main(int argc, char** argv) {
   cmd::InspectOpts inspect_opts; // has: recursive, format, report, verbose, no_color
   inspect->add_option("files", inspect_targets, "Files to inspect")->required();
   inspect->add_flag("-v,--verbose", inspect_opts.verbose, "Verbose field listing");
+  inspect->add_flag("-r,--recursive", inspect_opts.recursive, "Recurse into directories");
+  inspect->add_option("--report", inspect_opts.report, "Write JSON report to file");
+  inspect->add_option("--format", inspect_opts.format, "Output format: auto|json|pretty");
 
   // ----- strip -----
   auto* strip = app.add_subcommand("strip", "Strip metadata");
@@ -27,8 +30,15 @@ int main(int argc, char** argv) {
   strip->add_flag("--dry-run", strip_opts.dry_run, "Show plan without writing");
   strip->add_flag("--in-place", strip_opts.in_place, "Overwrite original files (no backup)");
   strip->add_option("-o,--out-dir", strip_opts.out_dir, "Output directory");
+  strip->add_flag("-r,--recursive", strip_opts.recursive, "Recurse into directories");
+  strip->add_flag("--yes", strip_opts.yes, "Skip confirmation prompts");
+  strip->add_option("--report", strip_opts.report, "Write JSON report to file");
+  strip->add_option("--format", strip_opts.format, "Output format: auto|json|pretty");
   strip->add_flag("--safe", safe_flag, "Use built-in safe policy");
   strip->add_option("--custom", custom_policy, "Policy file (YAML/JSON)");
+  std::vector<std::string> keep_cli, drop_cli;
+  strip->add_option("--keep", keep_cli, "Keep specific field(s) (repeatable)")->expected(-1);
+  strip->add_option("--drop", drop_cli, "Drop specific field(s) (repeatable)")->expected(-1);
 
   // ----- explain -----
   auto* explain = app.add_subcommand("explain", "Explain risks for a file");
@@ -51,8 +61,8 @@ int main(int argc, char** argv) {
     return cmd::run_inspect(inspect_targets, inspect_opts);
   }
   if (strip->parsed()) {
-    // Build policy from safe/custom; no extra keep/drop from CLI yet
-    core::Policy pol = core::load_policy(safe_flag, custom_policy, /*keep*/{}, /*drop*/{});
+    // Build policy from safe/custom and CLI keep/drop
+    core::Policy pol = core::load_policy(safe_flag, custom_policy, keep_cli, drop_cli);
     return cmd::run_strip(strip_targets, pol, strip_opts);
   }
   if (explain->parsed()) {

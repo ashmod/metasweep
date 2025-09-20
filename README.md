@@ -19,6 +19,14 @@ Prebuilt packages are published for tagged releases:
 - Linux/macOS/Windows: see the Releases page artifacts (TGZ/ZIP) containing `metasweep` and built-in policies.
 - Linux AppImage: a single self-contained `*.AppImage` that runs without extra packages.
 
+Via npm (Linux only, for now)
+- One-line install using an npm shim that downloads the native binary:
+  - Global: `npm i -g metasweep` → run `metasweep ...`
+  - On-demand: `npx metasweep --help`
+- Notes:
+  - Currently supports Linux x64 (AppImage) and fetches the artifact from GitHub Releases.
+  - If you use a fork or a different GitHub org, set env `METASWEEP_GH_REPO=owner/repo` before install, or `METASWEEP_DOWNLOAD_URL` to a direct asset URL.
+
 To install from a package:
 ```bash
 # Example Linux (tar.gz)
@@ -30,6 +38,10 @@ sudo cp -r share/metasweep/policies/* /usr/local/share/metasweep/policies/
 # AppImage
 chmod +x metasweep-*.AppImage
 ./metasweep-*.AppImage --help
+
+# npm (Linux x64)
+npm i -g metasweep
+metasweep --help
 ```
 
 ## Build from source
@@ -55,13 +67,21 @@ Commands:
 Common options:
   --no-color              Disable ANSI colors
   -v, --verbose           Extra detail (repeatable on inspect/explain)
+  -r, --recursive         Recurse into directories
 
 Strip options:
   --safe                  Use built-in safe policy
   --custom FILE           Use policy file (YAML/JSON) [placeholder]
   --dry-run               Show what would be dropped/kept
   --in-place              Overwrite originals
+  --yes                   Skip confirmation for --in-place
   -o, --out-dir DIR       Write cleaned files to DIR
+  --keep FIELD            Keep specific fields (repeatable)
+  --drop FIELD            Drop specific fields (repeatable)
+
+Inspect output options:
+  --format json|pretty    Stream JSON to stdout or show table
+  --report FILE           Write JSON report to file
 ```
 
 ## Examples
@@ -76,10 +96,16 @@ metasweep strip photo.jpg
 metasweep strip --safe photo.jpg
 
 # JSON report for a batch
-metasweep inspect ./to-share --report report.json
+metasweep inspect ./to-share -r --format json > report.json
 
 # Dry-run to preview what would be removed/kept
 metasweep strip --dry-run photo.jpg
+
+# Recursive with glob
+metasweep strip -r "images/*.jpg" --safe -o cleaned/
+
+# In-place with confirmation
+metasweep strip -r ./to-share --in-place --yes
 ```
 
 ## Policies

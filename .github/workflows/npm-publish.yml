@@ -1,0 +1,27 @@
+name: npm-publish
+
+on:
+  workflow_dispatch: {}
+  release:
+    types: [published]
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Set version to match project
+        run: |
+          # sync npm package version to project version if needed
+          PROJ_VER=$(grep -Po 'project\(metadata_tool LANGUAGES CXX VERSION \K[^)]+' CMakeLists.txt)
+          node -e "let p=require('./tools/npm/package.json'); p.version='${PROJ_VER}'; require('fs').writeFileSync('./tools/npm/package.json', JSON.stringify(p, null, 2)+'\n')"
+      - name: Publish
+        working-directory: tools/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+

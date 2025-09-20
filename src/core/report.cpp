@@ -318,8 +318,7 @@ static std::string json_escape(const std::string& s){
   return o;
 }
 
-void write_json_report(const std::vector<InspectResult>& results, const std::string& path){
-  std::ofstream f(path, std::ios::binary|std::ios::trunc);
+static void json_write(std::ostream& f, const std::vector<InspectResult>& results){
   f << "{\n  \"files\": [\n";
   for (size_t i=0;i<results.size();++i){
     const auto& r = results[i];
@@ -350,6 +349,15 @@ void write_json_report(const std::vector<InspectResult>& results, const std::str
     f << "\n";
   }
   f << "  ]\n}\n";
+}
+
+void write_json_report(const std::vector<InspectResult>& results, const std::string& path){
+  std::ofstream f(path, std::ios::binary|std::ios::trunc);
+  json_write(f, results);
+}
+
+void write_json_report_stream(std::ostream& os, const std::vector<InspectResult>& results){
+  json_write(os, results);
 }
 
 

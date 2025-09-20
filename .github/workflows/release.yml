@@ -8,26 +8,12 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            install: sudo apt-get update && sudo apt-get install -y cmake build-essential libexiv2-dev libtag1-dev zlib1g-dev
-            cpack: cpack -G TGZ --config build/CPackConfig.cmake
-          - os: macos-latest
-            install: brew install cmake exiv2 taglib zlib pkg-config
-            cpack: cpack -G TGZ --config build/CPackConfig.cmake
-          - os: windows-latest
-            install: echo "no extra deps on Windows"
-            cpack: cpack -G ZIP --config build/CPackConfig.cmake
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install deps
-        run: ${{ matrix.install }}
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential libexiv2-dev libtag1-dev zlib1g-dev
         shell: bash
 
       - name: Configure (full)
@@ -41,16 +27,15 @@ jobs:
         run: cmake --install build --config Release --prefix "${{ github.workspace }}/staging"
 
       - name: Package (CPack)
-        run: ${{ matrix.cpack }}
+        run: cpack -G TGZ --config build/CPackConfig.cmake
         shell: bash
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: metasweep-${{ runner.os }}-full
+          name: metasweep-linux-tar
           path: |
             *.tar.gz
-            *.zip
 
   publish:
     needs: [build, appimage]

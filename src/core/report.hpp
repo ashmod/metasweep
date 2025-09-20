@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <ostream>
 #include <vector>
 #include "detect.hpp"
 #include "policy.hpp"
@@ -18,8 +19,9 @@ void print_summary(const InspectResult& before, const InspectResult& after, cons
 // Risks for a single file (used by `explain`)
 void print_risks(const InspectResult&, int verbose);
 
-// Write HTML report to path
+// JSON report helpers
 void write_json_report(const std::vector<InspectResult>& results, const std::string& path);
+void write_json_report_stream(std::ostream& os, const std::vector<InspectResult>& results);
 
 // (stubs for later)
 std::string to_json(const InspectResult&);
