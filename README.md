@@ -38,7 +38,7 @@
     <img src="assets/preview_light.png" alt="metasweep preview">
 </picture>
 
-<br /><br />
+<br />
 
 **Quick install (Linux only for now):**
 
