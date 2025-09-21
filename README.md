@@ -103,7 +103,68 @@ Commands:
   explain     Describe risks & recommendations
 ```
 
-(…see [full CLI docs](#) below)
+(…see [full CLI docs](#cli-documentation) below)
+
+---
+
+## CLI Documentation
+
+### Commands
+
+#### `inspect` - Inspect metadata
+
+Show metadata summary without making changes.
+
+```
+metasweep inspect [OPTIONS] files...
+```
+
+**Positionals:**
+- `files`: Files to inspect (required, multiple allowed)
+
+**Options:**
+- `-v, --verbose`: Verbose field listing (can be repeated for more verbosity)
+- `-r, --recursive`: Recurse into directories
+- `--report TEXT`: Write JSON report to file
+- `--format TEXT`: Output format: `auto`, `json`, or `pretty` (default: auto)
+
+#### `strip` - Strip metadata
+
+Remove metadata according to the specified policy.
+
+```
+metasweep strip [OPTIONS] files...
+```
+
+**Positionals:**
+- `files`: Files to strip (required, multiple allowed)
+
+**Options:**
+- `--dry-run`: Show plan without writing any files
+- `--in-place`: Overwrite original files (no backup)
+- `-o, --out-dir TEXT`: Output directory for cleaned files
+- `-r, --recursive`: Recurse into directories
+- `--yes`: Skip confirmation prompts
+- `--report TEXT`: Write JSON report to file
+- `--format TEXT`: Output format: `auto`, `json`, or `pretty` (default: auto)
+- `--safe`: Use built-in safe policy (keeps Orientation/ICC/DPI, drops identifiers)
+- `--custom TEXT`: Policy file (YAML/JSON)
+- `--keep TEXT`: Keep specific field(s) (repeatable)
+- `--drop TEXT`: Drop specific field(s) (repeatable)
+
+#### `explain` - Explain risks for a file
+
+Describe metadata risks and recommendations for a specific file.
+
+```
+metasweep explain [OPTIONS] file
+```
+
+**Positionals:**
+- `file`: File to explain (required)
+
+**Options:**
+- `-v, --verbose`: Verbose field listing (can be repeated for more verbosity)
 
 ---
 
