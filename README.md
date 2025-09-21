@@ -1,8 +1,44 @@
-# metasweep — metadata inspector & cleaner
+# metasweep: metadata inspector & cleaner
 
-Local-only. Transparent. Fast.
+
+<picture>
+    <source srcset="assets/logo_dark.svg"  media="(prefers-color-scheme: dark)">
+    <!-- markdown-link-check-disable-next-line -->
+    <img src="assets/logo_light.svg">
+</picture>
+
+
+<div align="center">
+    Local. Transparent. Fast.
+</div>
+
+<br />
+
+
+<div align="center">
+
+[![Release CI](https://github.com/ashmod/metasweep/actions/workflows/release.yml/badge.svg)](https://github.com/ashmod/metasweep/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/ashmod/metasweep?display_name=tag&sort=semver)](https://github.com/ashmod/metasweep/releases)
+[![npm](https://img.shields.io/npm/v/metasweep?logo=npm)](https://www.npmjs.com/package/metasweep)
+[![License](https://img.shields.io/github/license/ashmod/metasweep)](LICENSE)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-blue)](https://en.wikipedia.org/wiki/C%2B%2B20)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=white)](https://ubuntu.com/)
+[![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white)](https://www.apple.com/macos/)
+[![Windows](https://img.shields.io/badge/Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows/)
+
+</div>
+
+
 
 **metasweep** inspects and strips hidden metadata from common file types. It favors transparency (see what’s inside), choice (policies: aggressive/safe/custom), and trust (no network, open source).
+
+<picture>
+    <source srcset="assets/preview_dark.png"  media="(prefers-color-scheme: dark)">
+    <!-- markdown-link-check-disable-next-line -->
+    <img src="assets/preview_light.png" alt="metasweep preview">
+</picture>
+
+<br />
 
 **Quick install (Linux only for now):**
 
@@ -190,7 +226,7 @@ metasweep inspect ./to-share -r --format json > report.json
 
 * **Aggressive (default):** keeps only essential fields like Orientation and ColorProfile.
 * **Safe (`--safe`):** keeps Orientation/ICC/DPI, drops identifiers like GPS, serials, authorship, software tags.
-* Reference policy files are under `share/metasweep/policies`.
+* Reference policy files are under [`policies/`](./policies/).
 
 ---
 
