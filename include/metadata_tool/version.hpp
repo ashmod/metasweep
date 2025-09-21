@@ -1,4 +1,4 @@
 #pragma once
 
 // Metasweep version string
-#define METASWEEP_VERSION "1.0.0"
+#define METASWEEP_VERSION "1.0.1"

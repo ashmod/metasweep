@@ -19,9 +19,16 @@ jobs:
           # sync npm package version to project version if needed
           PROJ_VER=$(grep -Po 'project\(metadata_tool LANGUAGES CXX VERSION \K[^)]+' CMakeLists.txt)
           node -e "let p=require('./tools/npm/package.json'); p.version='${PROJ_VER}'; require('fs').writeFileSync('./tools/npm/package.json', JSON.stringify(p, null, 2)+'\n')"
+          echo "PROJ_VER=${PROJ_VER}" >> $GITHUB_ENV
+      - name: Skip if version already on npm
+        run: |
+          if npm view metasweep@"${PROJ_VER}" version >/dev/null 2>&1; then
+            echo "metasweep@${PROJ_VER} already published. Skipping publish step.";
+            exit 0;
+          fi
+        shell: bash
       - name: Publish
         working-directory: tools/npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
-
