@@ -9,19 +9,22 @@
     "postinstall": "node install.js"
   },
   "os": ["linux"],
+  "cpu": ["x64"],
   "engines": {
     "node": ">=14"
   },
   "files": [
     "bin",
-    "install.js"
+    "install.js",
+    "README.md"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ashmod/metasweep.git"
   },
+  "homepage": "https://github.com/ashmod/metasweep",
+  "bugs": { "url": "https://github.com/ashmod/metasweep/issues" },
   "keywords": ["metadata", "privacy", "exif", "pdf", "id3", "cli"],
   "author": "",
   "license": "MIT"
 }
-
