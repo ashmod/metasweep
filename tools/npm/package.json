@@ -1,11 +1,13 @@
 {
   "name": "metasweep",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "metasweep - metadata inspector & cleaner (npm package bundles native binaries)",
   "bin": {
     "metasweep": "bin/metasweep.js"
   },
-  "scripts": {},
+  "scripts": {
+    "postinstall": "node install.js"
+  },
   "os": ["linux","darwin","win32"],
   "cpu": ["x64","arm64"],
   "engines": {
@@ -14,6 +16,7 @@
   "files": [
     "bin",
     "vendor",
+    "install.js",
     "README.md"
   ],
   "repository": {
