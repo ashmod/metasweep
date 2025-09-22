@@ -10,8 +10,25 @@ option(ENABLE_BACKEND_EXIV2 "Enable image backend (exiv2)" ON)
 option(ENABLE_BACKEND_POPPLER "Enable PDF backend (poppler)" ON)
 option(ENABLE_BACKEND_TAGLIB "Enable audio backend (taglib)" ON)
 option(ENABLE_BACKEND_MINIZIP "Enable ZIP backend (minizip)" ON)
+option(STATIC_LINKING "Link statically for portable binaries" OFF)
 
 # Portable build option: link static C++ runtime where possible for easier distribution
+if(STATIC_LINKING)
+  message(STATUS "Static linking enabled for portable builds")
+  
+  # Link statically against system libraries
+  if(UNIX AND NOT APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    # Try to prefer static libraries
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    # Force static linking where possible
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+  
+  if(WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+  endif()
+endif()
 
 # Ensure CLI11 is available (prefer local cmake helper, fallback to FetchContent)
 set(_CLI11_HELPER "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchCLI11.cmake")

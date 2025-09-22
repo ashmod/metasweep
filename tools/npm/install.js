@@ -27,6 +27,20 @@ const arch = process.arch;         // 'x64', 'arm64', ...
 const version = pkg.version;
 const tag = `v${version}`;
 
+// Test if a binary works by running --help
+function testBinary(binPath) {
+  return new Promise((resolve) => {
+    if (!fs.existsSync(binPath)) {
+      resolve(false);
+      return;
+    }
+    const proc = spawn(binPath, ['--help'], { stdio: 'pipe', timeout: 5000 });
+    proc.on('error', () => resolve(false));
+    proc.on('exit', (code) => resolve(code === 0));
+    setTimeout(() => { proc.kill(); resolve(false); }, 5000);
+  });
+}
+
 function parseRepo() {
   if (process.env.METASWEEP_GH_REPO) return process.env.METASWEEP_GH_REPO; // owner/repo
   const repo = pkg.repository && pkg.repository.url;
@@ -135,8 +149,14 @@ function extractZip(archive, dest) {
         ];
         const found = binCandidates.find(p => fs.existsSync(p));
         if (found && !found.endsWith('.exe')) fs.chmodSync(found, 0o755);
-        log(`Installed to ${vendorDir}`);
-        return;
+        
+        // Test if the binary works
+        if (found && await testBinary(found)) {
+          log(`Installed to ${vendorDir}`);
+          return;
+        } else {
+          log(`Binary doesn't work (missing libraries?). Trying fallback...`);
+        }
       } catch (e) {
         log(`Primary asset failed (${e.message}). Will try fallback if available.`);
       }
