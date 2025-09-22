@@ -118,24 +118,28 @@ function extractZip(archive, dest) {
     }
 
     if (plan.primary) {
-      const archivePath = path.join(vendorDir, path.basename(plan.primary));
-      log(`Downloading ${plan.primary}`);
-      await download(plan.primary, archivePath);
-      if (plan.kind === 'zip') {
-        await extractZip(archivePath, vendorDir);
-      } else {
-        await extractTgz(archivePath, vendorDir);
+      try {
+        const archivePath = path.join(vendorDir, path.basename(plan.primary));
+        log(`Downloading ${plan.primary}`);
+        await download(plan.primary, archivePath);
+        if (plan.kind === 'zip') {
+          await extractZip(archivePath, vendorDir);
+        } else {
+          await extractTgz(archivePath, vendorDir);
+        }
+        const binCandidates = [
+          path.join(vendorDir, 'bin', 'metasweep'),
+          path.join(vendorDir, 'metasweep'),
+          path.join(vendorDir, 'bin', 'metasweep.exe'),
+          path.join(vendorDir, 'metasweep.exe'),
+        ];
+        const found = binCandidates.find(p => fs.existsSync(p));
+        if (found && !found.endsWith('.exe')) fs.chmodSync(found, 0o755);
+        log(`Installed to ${vendorDir}`);
+        return;
+      } catch (e) {
+        log(`Primary asset failed (${e.message}). Will try fallback if available.`);
       }
-      const binCandidates = [
-        path.join(vendorDir, 'bin', 'metasweep'),
-        path.join(vendorDir, 'metasweep'),
-        path.join(vendorDir, 'bin', 'metasweep.exe'),
-        path.join(vendorDir, 'metasweep.exe'),
-      ];
-      const found = binCandidates.find(p => fs.existsSync(p));
-      if (found && !found.endsWith('.exe')) fs.chmodSync(found, 0o755);
-      log(`Installed to ${vendorDir}`);
-      return;
     }
 
     if (plan.fallback) {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(metadata_tool LANGUAGES CXX VERSION 1.0.2)
+project(metadata_tool LANGUAGES CXX VERSION 1.0.3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
