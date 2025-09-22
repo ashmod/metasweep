@@ -213,28 +213,6 @@ target_link_libraries(metasweep PRIVATE core CLI11::CLI11 fmt::fmt)
 install(TARGETS metasweep RUNTIME DESTINATION bin)
 install(DIRECTORY policies/ DESTINATION share/metasweep/policies)
 
-# Bundle third-party shared libraries for end users on macOS/Windows
-if(APPLE OR WIN32)
-  # Use CMake BundleUtilities to copy dependent shared libs next to the executable
-  install(CODE [[
-    include(BundleUtilities)
-    # Ensure absolute install prefix when --prefix is relative
-    get_filename_component(_prefix_abs "${CMAKE_INSTALL_PREFIX}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
-    set(_exe "${_prefix_abs}/bin/metasweep")
-    set(_search "")
-    if(APPLE)
-      # Common Homebrew/MacPorts locations
-      set(_search "/opt/homebrew/lib;/usr/local/lib;/opt/local/lib")
-    elseif(WIN32)
-      if(DEFINED ENV{VCPKG_ROOT})
-        set(_search "$ENV{VCPKG_ROOT}/installed/x64-windows/bin;$ENV{VCPKG_ROOT}/installed/x64-windows/lib")
-      endif()
-    endif()
-    message(STATUS "Fixing up bundle: ${_exe}")
-    fixup_bundle("${_exe}" "" "${_search}")
-  ]])
-endif()
-
 enable_testing()
 add_subdirectory(tests)
 
