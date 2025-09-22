@@ -1,6 +1,6 @@
 {
   "name": "metasweep",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "metasweep - metadata inspector & cleaner (npm package bundles native binaries)",
   "bin": {
     "metasweep": "bin/metasweep.js"
