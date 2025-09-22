@@ -3,18 +3,18 @@
   metasweep npm installer
   - Detects platform/arch
   - Downloads the appropriate prebuilt artifact from GitHub Releases
-  - Stores it under ./bin/.vendor and makes the bin shim run it
+  - Prefers TGZ/ZIP binaries (no FUSE), falls back to AppImage on Linux
+  - Stores under ./bin/.vendor and the bin shim runs it
 
-  Notes:
-   - Currently supports Linux x64 via the AppImage produced by CI
-   - You can override the repository or URL with env vars:
-       METASWEEP_GH_REPO=owner/repo  (default from package.json repository.url)
-       METASWEEP_DOWNLOAD_URL=...    (direct URL to an asset)
+  You can override with env vars:
+   - METASWEEP_GH_REPO=owner/repo    (default parsed from package.json repository.url)
+   - METASWEEP_DOWNLOAD_URL=...      (direct asset URL)
 */
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { spawn } = require('child_process');
 
 const pkg = require('./package.json');
 
@@ -23,13 +23,6 @@ function fail(msg) { console.error(`[metasweep] ${msg}`); process.exit(1); }
 
 const platform = process.platform; // 'linux', 'darwin', 'win32'
 const arch = process.arch;         // 'x64', 'arm64', ...
-
-// Only Linux x64 for now
-if (!(platform === 'linux' && arch === 'x64')) {
-  log(`No prebuilt binary for ${platform}/${arch} yet. Skipping download.`);
-  log(`You can download from Releases manually or use the AppImage on Linux.`);
-  process.exit(0);
-}
 
 const version = pkg.version;
 const tag = `v${version}`;
@@ -44,17 +37,8 @@ function parseRepo() {
 }
 
 const repo = parseRepo();
-let url = process.env.METASWEEP_DOWNLOAD_URL || null;
-if (!url) {
-  if (!repo) fail('Cannot determine GitHub repo (set METASWEEP_GH_REPO=owner/repo).');
-  // Default AppImage name from linuxdeploy is typically '<name>-x86_64.AppImage'
-  const asset = `metasweep-x86_64.AppImage`;
-  url = `https://github.com/${repo}/releases/download/${tag}/${asset}`;
-}
 
 const vendorDir = path.join(__dirname, 'bin', '.vendor');
-const outPath = path.join(vendorDir, 'metasweep');
-
 fs.mkdirSync(vendorDir, { recursive: true });
 
 function download(u, dest) {
@@ -77,14 +61,94 @@ function download(u, dest) {
   });
 }
 
+function mapArch() {
+  if (arch === 'x64') return 'x86_64';
+  if (arch === 'arm64') return 'arm64';
+  if (arch === 'ia32') return 'x86';
+  return arch;
+}
+
+function guessAsset() {
+  if (process.env.METASWEEP_DOWNLOAD_URL) return { url: process.env.METASWEEP_DOWNLOAD_URL, kind: 'direct' };
+  if (!repo) fail('Cannot determine GitHub repo (set METASWEEP_GH_REPO=owner/repo).');
+  const a = mapArch();
+  const base = `https://github.com/${repo}/releases/download/${tag}`;
+  if (platform === 'linux') {
+    return {
+      primary: `${base}/metasweep-${version}-Linux-${a}.tar.gz`,
+      fallback: `${base}/metasweep-x86_64.AppImage`,
+      kind: 'linux'
+    };
+  } else if (platform === 'darwin') {
+    return { primary: `${base}/metasweep-${version}-Darwin-${a}.tar.gz`, kind: 'tgz' };
+  } else if (platform === 'win32') {
+    const winArch = arch === 'x64' ? 'AMD64' : a;
+    return { primary: `${base}/metasweep-${version}-Windows-${winArch}.zip`, kind: 'zip' };
+  }
+  return null;
+}
+
+function extractTgz(archive, dest) {
+  return new Promise((res, rej) => {
+    fs.mkdirSync(dest, { recursive: true });
+    const p = spawn('tar', ['-xzf', archive, '-C', dest], { stdio: 'inherit' });
+    p.on('exit', code => code === 0 ? res() : rej(new Error(`tar exit ${code}`)));
+  });
+}
+
+function extractZip(archive, dest) {
+  return new Promise((res, rej) => {
+    fs.mkdirSync(dest, { recursive: true });
+    if (platform === 'win32') {
+      const p = spawn('powershell', ['-NoProfile', '-Command', `Expand-Archive -LiteralPath "${archive}" -DestinationPath "${dest}" -Force`], { stdio: 'inherit' });
+      p.on('exit', code => code === 0 ? res() : rej(new Error(`Expand-Archive exit ${code}`)));
+    } else {
+      const p = spawn('unzip', ['-o', archive, '-d', dest], { stdio: 'inherit' });
+      p.on('exit', code => code === 0 ? res() : rej(new Error(`unzip exit ${code}`)));
+    }
+  });
+}
+
 (async () => {
   try {
-    log(`Downloading ${url}`);
-    await download(url, outPath);
-    fs.chmodSync(outPath, 0o755);
-    log(`Installed binary to ${outPath}`);
+    const plan = guessAsset();
+    if (!plan) {
+      log(`No prebuilt binary plan for ${platform}/${arch}. Skipping.`);
+      process.exit(0);
+    }
+
+    if (plan.primary) {
+      const archivePath = path.join(vendorDir, path.basename(plan.primary));
+      log(`Downloading ${plan.primary}`);
+      await download(plan.primary, archivePath);
+      if (plan.kind === 'zip') {
+        await extractZip(archivePath, vendorDir);
+      } else {
+        await extractTgz(archivePath, vendorDir);
+      }
+      const binCandidates = [
+        path.join(vendorDir, 'bin', 'metasweep'),
+        path.join(vendorDir, 'metasweep'),
+        path.join(vendorDir, 'bin', 'metasweep.exe'),
+        path.join(vendorDir, 'metasweep.exe'),
+      ];
+      const found = binCandidates.find(p => fs.existsSync(p));
+      if (found && !found.endsWith('.exe')) fs.chmodSync(found, 0o755);
+      log(`Installed to ${vendorDir}`);
+      return;
+    }
+
+    if (plan.fallback) {
+      const outPath = path.join(vendorDir, 'metasweep');
+      log(`Downloading ${plan.fallback}`);
+      await download(plan.fallback, outPath);
+      fs.chmodSync(outPath, 0o755);
+      log(`Installed AppImage to ${outPath}`);
+      return;
+    }
+
+    log('No install plan matched.');
   } catch (e) {
     fail(`Failed to download binary: ${e.message}`);
   }
 })();
-
